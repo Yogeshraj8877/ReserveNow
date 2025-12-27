@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "948657040840",
+    "project_id": "reserve-now-7e6d9",
+    "storage_bucket": "reserve-now-7e6d9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:948657040840:android:16c9c062beb13ed4c224fd",
+        "android_client_info": {
+          "package_name": "com.example.reserve_now"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBw-GlDloaPGbp4y0Km3yAzins8hScwafU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
