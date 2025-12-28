@@ -31,16 +31,44 @@ class TableBookingViewModel extends StateNotifier<AsyncValue<List<RestaurantTabl
 
   // Load tables from Firebase
   void _loadTables() {
+    print('TableBookingViewModel: Loading tables from Firebase...');
+    
     // Initialize tables in Firebase if needed
     FirebaseService.initializeTables();
     
     // Listen to real-time table updates
     FirebaseService.getTables().listen((tables) {
+      print('TableBookingViewModel: Received ${tables.length} tables from Firebase');
       _allTables = tables;
       state = AsyncValue.data(_allTables);
+      
+      // Log available tables count
+      final availableCount = getAvailableTables().length;
+      print('TableBookingViewModel: Available tables count: $availableCount');
     }, onError: (error) {
+      print('TableBookingViewModel: Error loading tables: $error');
       state = AsyncValue.error(error, StackTrace.current);
     });
+  }
+
+  // Manual refresh method to force reload tables
+  Future<void> refreshTables() async {
+    try {
+      print('Refreshing tables list...');
+      final tables = await FirebaseService.getTables().first;
+      print('TableBookingViewModel: Refreshed ${tables.length} tables from Firebase');
+      _allTables = tables;
+      state = AsyncValue.data(_allTables);
+      
+      // Log available tables count after refresh
+      final availableCount = getAvailableTables().length;
+      print('TableBookingViewModel: Available tables after refresh: $availableCount');
+      
+      print('Tables refreshed successfully');
+    } catch (e) {
+      print('Error refreshing tables: $e');
+      state = AsyncValue.error(e, StackTrace.current);
+    }
   }
 
   void initializeTables() {
@@ -161,6 +189,17 @@ class TableBookingViewModel extends StateNotifier<AsyncValue<List<RestaurantTabl
       print('Calling FirebaseService.createBooking...');
       await FirebaseService.createBooking(booking);
       print('Booking created successfully');
+      
+      // Refresh the tables list to update the booked status
+      await refreshTables();
+      
+      // Trigger manual refresh of available tables provider
+      ref.read(availableTablesRefreshProvider.notifier).state++;
+      
+      // Log the updated table status
+      final updatedTable = _allTables.firstWhere((t) => t.id == selectedTableId);
+      print('Table ${selectedTableId} status after booking: ${updatedTable.status}');
+      print('Available tables count: ${getAvailableTables().length}');
       
       // Don't reset selection immediately - let the success dialog show first
       // resetSelection(ref);

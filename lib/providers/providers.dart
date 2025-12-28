@@ -19,16 +19,43 @@ final selectedEndDateProvider = StateProvider<DateTime?>((ref) => null);
 final selectedTimeSlotProvider = StateProvider<TimeSlot?>((ref) => null);
 final guestCountProvider = StateProvider<int>((ref) => 1);
 
+// Available Tables Provider with manual refresh capability
 final availableTablesProvider = Provider<List<RestaurantTable>>((ref) {
   final tables = ref.watch(tableBookingViewModelProvider);
   final guestCount = ref.watch(guestCountProvider);
   
   return tables.when(
     data: (tableList) {
-      return tableList.where((table) => 
+      final available = tableList.where((table) => 
         table.capacity >= guestCount && 
         table.status != TableStatus.booked
       ).toList();
+      print('Available tables provider: Found ${available.length} available tables out of ${tableList.length} total');
+      return available;
+    },
+    loading: () => <RestaurantTable>[],
+    error: (_, __) => <RestaurantTable>[],
+  );
+});
+
+// Manual refresh trigger for available tables
+final availableTablesRefreshProvider = StateProvider<int>((ref) => 0);
+
+final availableTablesWithRefreshProvider = Provider<List<RestaurantTable>>((ref) {
+  // Watch for manual refresh triggers
+  ref.watch(availableTablesRefreshProvider);
+  
+  final tables = ref.watch(tableBookingViewModelProvider);
+  final guestCount = ref.watch(guestCountProvider);
+  
+  return tables.when(
+    data: (tableList) {
+      final available = tableList.where((table) => 
+        table.capacity >= guestCount && 
+        table.status != TableStatus.booked
+      ).toList();
+      print('Available tables with refresh: Found ${available.length} available tables out of ${tableList.length} total');
+      return available;
     },
     loading: () => <RestaurantTable>[],
     error: (_, __) => <RestaurantTable>[],

@@ -45,7 +45,7 @@ class FirebaseService {
     // Create 1000 tables arranged in rows
     int tableId = 1;
     int maxTablesPerRow = 10; // 10 tables per row for better layout
-    int totalRows = 100; // 100 rows to get 1000 tables
+    int totalRows = 10; // 100 rows to get 1000 tables
     
     for (int row = 0; row < totalRows; row++) {
       for (int col = 0; col < maxTablesPerRow; col++) {
@@ -84,29 +84,45 @@ class FirebaseService {
   static Stream<List<RestaurantTable>> getTables() {
     return _database.child(_tablesPath).onValue.map((event) {
       final data = event.snapshot.value;
+      print('FirebaseService: Raw tables data type: ${data.runtimeType}');
+      print('FirebaseService: Raw tables data exists: ${event.snapshot.exists}');
       
-      if (data == null) return <RestaurantTable>[];
+      if (data == null) {
+        print('FirebaseService: No tables data found');
+        return <RestaurantTable>[];
+      }
+      
+      List<RestaurantTable> tables = [];
       
       // Handle both Map and List cases
       if (data is Map<dynamic, dynamic>) {
-        return data.entries.map((entry) {
+        print('FirebaseService: Processing tables as Map with ${data.entries.length} entries');
+        tables = data.entries.map((entry) {
           final tableData = Map<String, dynamic>.from(entry.value as Map);
           return RestaurantTable.fromJson(tableData);
         }).toList();
       } else if (data is List) {
-        return data.whereType<Map<dynamic, dynamic>>().map((tableData) {
+        print('FirebaseService: Processing tables as List with ${data.length} items');
+        tables = data.whereType<Map<dynamic, dynamic>>().map((tableData) {
           return RestaurantTable.fromJson(Map<String, dynamic>.from(tableData));
         }).toList();
       }
       
-      return <RestaurantTable>[];
+      print('FirebaseService: Loaded ${tables.length} tables');
+      final availableTables = tables.where((t) => t.status == TableStatus.available).length;
+      final bookedTables = tables.where((t) => t.status == TableStatus.booked).length;
+      print('FirebaseService: Available: $availableTables, Booked: $bookedTables, Total: ${tables.length}');
+      
+      return tables;
     });
   }
 
   // Update table status
   static Future<void> updateTableStatus(String tableId, TableStatus status) async {
     try {
+      print('Updating table $tableId status to: ${status.name}');
       await _database.child(_tablesPath).child(tableId).update({'status': status.name});
+      print('Table $tableId status updated successfully to: ${status.name}');
     } catch (e) {
       print('Error updating table status: $e');
       rethrow;

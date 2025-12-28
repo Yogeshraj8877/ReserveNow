@@ -313,15 +313,16 @@ class TableSelectionView extends ConsumerWidget {
                       const SizedBox(height: 8),
                       
                       // Tables in row with better spacing
-                      Container(
-                        height: 60,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.center,
+                      SizedBox(
+                        height: 80, // Increased height to accommodate wrapped content
+                        child: Wrap(
+                          alignment: WrapAlignment.center,
+                          spacing: 4,
+                          runSpacing: 4,
                           children: rowTables.map((table) {
                             final isSelected = ref.watch(selectedTableIdProvider) == table.id;
                             return Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 2),
+                              padding: const EdgeInsets.symmetric(horizontal: 1),
                               child: TableWidget(
                                 table: table,
                                 onTap: () {
